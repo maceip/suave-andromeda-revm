@@ -189,7 +189,7 @@ fn sgxattest_httpscall(_input: &[u8], gas_limit: u64) -> PrecompileResult {
         let url = String::from_utf8_lossy(_input).into_owned();
 
         let _test = kettle_post(url.clone(), "hi".to_string(), None);
-        return Ok((gas_used, kettle_get( url).unwrap().into_bytes()));
+        return Ok((gas_used, kettle_get(url).unwrap().into_bytes()));
     }
 }
 
