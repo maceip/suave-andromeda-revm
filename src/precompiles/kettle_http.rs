@@ -5,7 +5,7 @@ use reqwest::Url;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use reqwest::header::HeaderValue;
-use reqwest::header::{ACCEPT, AUTHORIZATION};
+use reqwest::header::{ ACCEPT, AUTHORIZATION };
 
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -42,16 +42,35 @@ impl Client {
             .map_err(|e| e.into())
     }
 
-    pub fn post<I, O>(&self, url: String, body: &I, token: Option<&str>) -> Result<O, reqwest::Error>
+    pub fn post<I, O>(
+        &self,
+        url: String,
+        body: &I,
+        token: Option<&str>
+    )
+        -> Result<O, reqwest::Error>
         where I: Serialize, O: DeserializeOwned
     {
         let zurl = Url::parse(&url).expect("url parse");
         let json = HeaderValue::from_static("application/json");
-        match token{
-            Some(atoken) =>             self.client.post(zurl).json(body).header(ACCEPT, &json).header(AUTHORIZATION, atoken).send()?.error_for_status()?.json(),
-            None =>  self.client.post(zurl).json(body).header(ACCEPT, &json).send()?.error_for_status()?.json(),
-
+        match token {
+            Some(token) =>
+                self.client
+                    .post(zurl)
+                    .json(body)
+                    .header(ACCEPT, &json)
+                    .header(AUTHORIZATION, token)
+                    .send()?
+                    .error_for_status()?
+                    .json(),
+            None =>
+                self.client
+                    .post(zurl)
+                    .json(body)
+                    .header(ACCEPT, &json)
+                    .send()?
+                    .error_for_status()?
+                    .json(),
         }
-
     }
 }
