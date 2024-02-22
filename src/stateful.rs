@@ -4,31 +4,36 @@ use core::convert::Infallible;
 
 use std::io;
 
-use tokio::runtime::Handle;
-use tokio::sync::{mpsc, watch};
-use tokio::task::block_in_place;
+use tokio::{
+    runtime::Handle,
+    sync::{mpsc, watch},
+    task::block_in_place,
+};
 
-use execution::rpc::http_rpc::HttpRpc;
-use execution::state::State;
-use execution::ExecutionClient;
+use execution::{rpc::http_rpc::HttpRpc, state::State, ExecutionClient};
 use helios::prelude::Block;
 
 use revm::{
     db::{CacheDB, EmptyDB},
     inspectors::TracerEip3155,
-    primitives::SpecId,
-    primitives::{Address, B256, U256},
-    primitives::{BlockEnv, CfgEnv, EVMError, Env, ExecutionResult, MsgEnv, TxEnv},
+    primitives::{
+        Address, BlockEnv, CfgEnv, EVMError, Env, ExecutionResult, MsgEnv, SpecId, TxEnv, B256,
+        U256,
+    },
     Transact,
 };
 
-use ethers::core::types::{Block as EthersBlock, BlockNumber, TxHash};
-use ethers::providers::{Http, Provider, ProviderError};
-use ethers::utils as ethers_utils;
+use ethers::{
+    core::types::{Block as EthersBlock, BlockNumber, TxHash},
+    providers::{Http, Provider, ProviderError},
+    utils as ethers_utils,
+};
 use std::convert::TryFrom;
 
-use crate::consensus::Consensus;
-use crate::utils::{ethers_block_to_helios, BlockError};
+use crate::{
+    consensus::Consensus,
+    utils::{ethers_block_to_helios, BlockError},
+};
 use eyre::Report;
 use helios::types::BlockTag;
 
@@ -62,12 +67,7 @@ impl StatefulExecutor {
         let http_provider =
             Provider::<Http>::try_from(rpc.clone()).expect("could not instantiate HTTP Provider");
 
-        StatefulExecutor {
-            rpc_state_provider,
-            consensus,
-            http_provider,
-            finalized_block_tx,
-        }
+        StatefulExecutor { rpc_state_provider, consensus, http_provider, finalized_block_tx }
     }
 
     pub async fn advance(&mut self, block_tag: BlockTag) -> Result<(), StatefulExecutorError> {
@@ -79,10 +79,7 @@ impl StatefulExecutor {
 
         let block: EthersBlock<TxHash> = self
             .http_provider
-            .request(
-                "eth_getBlockByNumber",
-                [block_selector, ethers_utils::serialize(&false)],
-            )
+            .request("eth_getBlockByNumber", [block_selector, ethers_utils::serialize(&false)])
             .await
             .map_err(|err| StatefulExecutorError::ProviderError(err))?;
 
@@ -123,21 +120,11 @@ impl StatefulExecutor {
         let mut cfg = CfgEnv::default();
         cfg.spec_id = SpecId::SHANGHAI;
 
-        let msg = MsgEnv {
-            caller: tx.caller.clone(),
-        };
+        let msg = MsgEnv { caller: tx.caller.clone() };
 
-        let mut env = Env {
-            cfg,
-            msg,
-            tx,
-            block: block_env,
-        };
+        let mut env = Env { cfg, msg, tx, block: block_env };
 
-        let mut db = RemoteDB::new(
-            self.rpc_state_provider.clone(),
-            CacheDB::new(EmptyDB::new()),
-        );
+        let mut db = RemoteDB::new(self.rpc_state_provider.clone(), CacheDB::new(EmptyDB::new()));
 
         match match trace {
             true => {
@@ -170,7 +157,8 @@ impl StatefulExecutor {
         input: &str,
         trace: bool,
     ) -> Result<String, CommandError> {
-        // We support two commands: advance <block number|latest|empty(latest)> and execute <TxEnv json>
+        // We support two commands: advance <block number|latest|empty(latest)> and execute <TxEnv
+        // json>
         let (command, args) = match input.split_once(' ') {
             Some((command, args)) => (command, Some(args)),
             None => (input, None),
@@ -193,9 +181,7 @@ impl StatefulExecutor {
                 }
             }
             "execute" => match args {
-                None => Err(CommandError::InputError(String::from(
-                    "no args passed to execute",
-                ))),
+                None => Err(CommandError::InputError(String::from("no args passed to execute"))),
                 Some(args) => {
                     let tx = match serde_json::from_str::<TxEnv>(args) {
                         Ok(tx) => Ok(tx),
@@ -213,10 +199,9 @@ impl StatefulExecutor {
                                 e
                             ))),
                         },
-                        Err(e) => Err(CommandError::InputError(format!(
-                            "could not execute: {:?}",
-                            e
-                        ))),
+                        Err(e) => {
+                            Err(CommandError::InputError(format!("could not execute: {:?}", e)))
+                        }
                     }
                 }
             },

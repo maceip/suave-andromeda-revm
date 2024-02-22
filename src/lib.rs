@@ -10,10 +10,10 @@ pub mod evm;
 pub use evm::new_andromeda_revm;
 
 pub mod precompiles {
+    pub mod kettle_http;
     pub mod lib;
     pub mod services_manager;
     pub mod sgxattest;
-    pub mod kettle_http;
 }
 
 pub use precompiles::lib::andromeda_precompiles;

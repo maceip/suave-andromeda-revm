@@ -4,17 +4,19 @@ use serde_json;
 
 use clap::Parser;
 
-use tokio::sync::{mpsc, watch};
-use tokio::task::spawn_blocking;
+use tokio::{
+    sync::{mpsc, watch},
+    task::spawn_blocking,
+};
 
-use execution::rpc::http_rpc::HttpRpc;
-use execution::state::State;
-use execution::ExecutionClient;
+use execution::{rpc::http_rpc::HttpRpc, state::State, ExecutionClient};
 
 use revm::db::{CacheDB, Database, EmptyDB};
 
-use ethers::core::types::BlockNumber;
-use ethers::providers::{Http, Provider};
+use ethers::{
+    core::types::BlockNumber,
+    providers::{Http, Provider},
+};
 use std::convert::TryFrom;
 
 use revm::{
@@ -48,27 +50,20 @@ async fn main() {
     let block = provider
         .request(
             "eth_getBlockByNumber",
-            [
-                ethers_utils::serialize(&false),
-                ethers_utils::serialize(&BlockNumber::Latest),
-            ],
+            [ethers_utils::serialize(&false), ethers_utils::serialize(&BlockNumber::Latest)],
         )
         .await
         .expect("could not fetch latest block");
 
     let (_block_tx, block_rx) = mpsc::channel(1);
     let (finalized_block_tx, finalized_block_rx) = watch::channel(None);
-    let rpc_state_provider: ExecutionClient<HttpRpc> = ExecutionClient::new(
-        &args.rpc.clone(),
-        State::new(block_rx, finalized_block_rx, 1),
-    )
-    .unwrap();
+    let rpc_state_provider: ExecutionClient<HttpRpc> =
+        ExecutionClient::new(&args.rpc.clone(), State::new(block_rx, finalized_block_rx, 1))
+            .unwrap();
 
     let mut remote_db = RemoteDB::new(rpc_state_provider, CacheDB::new(EmptyDB::new()));
     finalized_block_tx
-        .send(Some(
-            ethers_block_to_helios(block).expect("block malformed"),
-        ))
+        .send(Some(ethers_block_to_helios(block).expect("block malformed")))
         .expect("could not send current block");
 
     let res = spawn_blocking(move || {
@@ -81,10 +76,7 @@ async fn main() {
     .expect("failed to start tx execution")
     .expect("failed to execute transaction");
 
-    println!(
-        "{}",
-        serde_json::to_string(&res).expect("failed to serialize result")
-    );
+    println!("{}", serde_json::to_string(&res).expect("failed to serialize result"));
 }
 
 fn execute_tx<DB: Database>(db: DB, tx: TxEnv) -> Result<ExecutionResult, EVMError<DB::Error>> {

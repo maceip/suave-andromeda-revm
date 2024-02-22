@@ -2,16 +2,22 @@ use ethers::abi::Detokenize;
 use sha2::*;
 use std::collections::HashMap;
 
-use ethers;
-use ethers::abi::{Contract, Token};
-use ethers::contract::{BaseContract, Lazy};
-use ethers::types::{Bytes, H256};
+use ethers::{
+    self,
+    abi::{Contract, Token},
+    contract::{BaseContract, Lazy},
+    types::{Bytes, H256},
+};
 
 use crate::external_services::common::CallContext;
 
-use crate::external_services::builder::builder::{BuilderError, BuilderService};
-use crate::external_services::redis::pubsub::{RedisPubsub, RedisPubsubError};
-use crate::external_services::redis::redis::{RedisService, RedisServiceError};
+use crate::external_services::{
+    builder::builder::{BuilderError, BuilderService},
+    redis::{
+        pubsub::{RedisPubsub, RedisPubsubError},
+        redis::{RedisService, RedisServiceError},
+    },
+};
 
 pub static SERVICES_MANAGER_ABI: Lazy<BaseContract> = Lazy::new(|| {
     let contract: Contract =
@@ -85,15 +91,11 @@ impl ServicesManager {
         // TODO: define elsewhere
         let service: Box<dyn Service> = match service_name.as_str() {
             #[cfg(feature = "redis_external_services")]
-            "redis" => Ok(
-                Box::new(RedisService::new(self.config.kv_redis_endpoint.clone()))
-                    as Box<dyn Service>,
-            ),
+            "redis" => Ok(Box::new(RedisService::new(self.config.kv_redis_endpoint.clone()))
+                as Box<dyn Service>),
             #[cfg(feature = "redis_external_services")]
-            "pubsub" => Ok(
-                Box::new(RedisPubsub::new(self.config.pubsub_redis_endpoint.clone()))
-                    as Box<dyn Service>,
-            ),
+            "pubsub" => Ok(Box::new(RedisPubsub::new(self.config.pubsub_redis_endpoint.clone()))
+                as Box<dyn Service>),
             #[cfg(not(feature = "redis_external_services"))]
             "redis" | "pubsub" => Err(ServiceError::ServiceUnavailable),
             "builder" => Ok(Box::new(BuilderService::new()) as Box<dyn Service>),
@@ -180,9 +182,7 @@ impl Service for RedisService {
 
     fn instantiate(&self, config: Bytes) -> Result<(), ServiceError> {
         if config.len() != 0 {
-            return Err(ServiceError::InstantiationError(String::from(
-                "unexpected config passed",
-            )));
+            return Err(ServiceError::InstantiationError(String::from("unexpected config passed")));
         }
 
         println!("instantiated redis with {:?}", self.redis_abi.methods);
@@ -219,9 +219,7 @@ impl Service for RedisPubsub {
 
     fn instantiate(&self, config: Bytes) -> Result<(), ServiceError> {
         if config.len() != 0 {
-            return Err(ServiceError::InstantiationError(String::from(
-                "unexpected config passed",
-            )));
+            return Err(ServiceError::InstantiationError(String::from("unexpected config passed")));
         }
 
         println!("instantiated pubsub with {:?}", self.pubsub_abi.methods);
@@ -260,9 +258,7 @@ impl Service for BuilderService {
 
     fn instantiate(&self, config: Bytes) -> Result<(), ServiceError> {
         if config.len() == 0 {
-            return Err(ServiceError::InstantiationError(String::from(
-                "missing config",
-            )));
+            return Err(ServiceError::InstantiationError(String::from("missing config")));
         }
 
         println!("instantiated builder with {:?}", self.builder_abi.methods);

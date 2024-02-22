@@ -42,9 +42,7 @@ pub fn extract_header(block: &Block) -> Result<Header> {
         transactions_root: FixedBytes::new(block.transactions_root.into()),
         receipts_root: FixedBytes::new(block.receipts_root.into()),
         withdrawals_root: None,
-        logs_bloom: Bloom {
-            0: FixedBytes::new(block.logs_bloom.to_vec().try_into().unwrap()),
-        },
+        logs_bloom: Bloom { 0: FixedBytes::new(block.logs_bloom.to_vec().try_into().unwrap()) },
         timestamp: block.timestamp.as_u64(),
         mix_hash: FixedBytes::new(block.mix_hash.into()),
         nonce: u64::from_be_bytes(B64::from_hex(block.nonce.clone())?.try_into()?),
@@ -69,10 +67,7 @@ impl Consensus {
         ]
         .to_vec();
 
-        Ok(Consensus {
-            latest_block: None,
-            signers,
-        })
+        Ok(Consensus { latest_block: None, signers })
     }
 
     pub fn advance(&mut self, block: &Block) -> Result<(), ConsensusError> {

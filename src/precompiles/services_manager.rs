@@ -2,17 +2,20 @@ use lazy_static::lazy_static;
 use reqwest::blocking::Client as ReqwestClient;
 use sha2::*;
 
-use ethers::abi::{encode, Bytes as AbiBytes, Contract, Token};
-use ethers::contract::{BaseContract, Lazy};
-use ethers::types::{Address, Bytes, H256};
-
-use revm::precompile::{
-    EnvPrecompileFn, Precompile, PrecompileError, PrecompileResult, PrecompileWithAddress,
+use ethers::{
+    abi::{encode, Bytes as AbiBytes, Contract, Token},
+    contract::{BaseContract, Lazy},
+    types::{Address, Bytes, H256},
 };
-use revm::primitives::{Address as RevmAddress, Env};
 
-use std::collections::HashMap;
-use std::sync::Mutex;
+use revm::{
+    precompile::{
+        EnvPrecompileFn, Precompile, PrecompileError, PrecompileResult, PrecompileWithAddress,
+    },
+    primitives::{Address as RevmAddress, Env},
+};
+
+use std::{collections::HashMap, sync::Mutex};
 
 use crate::u64_to_address;
 
@@ -23,10 +26,8 @@ pub static SERVICES_MANAGER_ABI: Lazy<BaseContract> = Lazy::new(|| {
     BaseContract::from(contract)
 });
 
-pub const RUN: PrecompileWithAddress = PrecompileWithAddress::new(
-    u64_to_address(0x3507),
-    Precompile::Env(run as EnvPrecompileFn),
-);
+pub const RUN: PrecompileWithAddress =
+    PrecompileWithAddress::new(u64_to_address(0x3507), Precompile::Env(run as EnvPrecompileFn));
 
 pub struct ServicesManager {
     pub service_handles: HashMap<H256, (RevmAddress, H256)>,
@@ -34,9 +35,7 @@ pub struct ServicesManager {
 
 impl ServicesManager {
     pub fn new() -> Self {
-        ServicesManager {
-            service_handles: HashMap::new(),
-        }
+        ServicesManager { service_handles: HashMap::new() }
     }
 }
 
@@ -80,12 +79,7 @@ fn get_service(input: &[u8], gas_limit: u64, env: &Env) -> PrecompileResult {
     let handle_hash = sha2::Sha256::digest(handle_bytes).to_vec();
     let contract_handle = H256::from_slice(&handle_hash);
 
-    if GLOBAL_SM
-        .lock()
-        .unwrap()
-        .service_handles
-        .contains_key(&contract_handle)
-    {
+    if GLOBAL_SM.lock().unwrap().service_handles.contains_key(&contract_handle) {
         return Ok((
             gas_used,
             encode(&[
@@ -131,9 +125,8 @@ fn call_service(input: &[u8], gas_limit: u64, env: &Env) -> PrecompileResult {
         return Err(PrecompileError::OutOfGas);
     }
 
-    let (contract_handle, service_calldata): (H256, AbiBytes) = SERVICES_MANAGER_ABI
-        .decode_input(input)
-        .map_err(|_e| INCORRECT_INPUTS)?;
+    let (contract_handle, service_calldata): (H256, AbiBytes) =
+        SERVICES_MANAGER_ABI.decode_input(input).map_err(|_e| INCORRECT_INPUTS)?;
 
     let locked_sm = GLOBAL_SM.lock().unwrap();
     let service_handle = match locked_sm.service_handles.get(&contract_handle) {

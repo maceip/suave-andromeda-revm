@@ -1,6 +1,8 @@
-use ethers;
-use ethers::abi::{encode, Contract, Detokenize, Token};
-use ethers::contract::{BaseContract, Lazy};
+use ethers::{
+    self,
+    abi::{encode, Contract, Detokenize, Token},
+    contract::{BaseContract, Lazy},
+};
 
 pub static BUILDER_ABI: Lazy<BaseContract> = Lazy::new(|| {
     let contract: Contract =
@@ -60,8 +62,6 @@ impl BuilderService {
             )
             .map_err(|_e| BuilderError::InvalidCalldata)?;
 
-        Ok(encode(&[Token::Uint(ethers::abi::Uint::from(
-            bundles.len(),
-        ))]))
+        Ok(encode(&[Token::Uint(ethers::abi::Uint::from(bundles.len()))]))
     }
 }

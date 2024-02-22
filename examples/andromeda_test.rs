@@ -3,8 +3,10 @@ use revm::{
     InMemoryDB, Transact,
 };
 
-use ethers::abi::{ethabi, parse_abi, Token};
-use ethers::contract::{BaseContract, Lazy};
+use ethers::{
+    abi::{ethabi, parse_abi, Token},
+    contract::{BaseContract, Lazy},
+};
 use std::include_str;
 
 use suave_andromeda_revm::new_andromeda_revm;
@@ -15,11 +17,8 @@ fn main() -> eyre::Result<()> {
     Ok(())
 }
 
-pub static ANDROMEDA_CODE: Lazy<Bytes> = Lazy::new(|| {
-    include_str!("examples_Andromeda_sol_Andromeda.bin")
-        .parse()
-        .unwrap()
-});
+pub static ANDROMEDA_CODE: Lazy<Bytes> =
+    Lazy::new(|| include_str!("examples_Andromeda_sol_Andromeda.bin").parse().unwrap());
 
 pub static ADDR_A: Address = address!("4838b106fce9647bdf1e7877bf73ce8b0bad5f97");
 pub static ADDR_B: Address = address!("F2d01Ee818509a9540d8324a5bA52329af27D19E");
@@ -58,10 +57,7 @@ fn simulate() -> eyre::Result<()> {
     let mut db = InMemoryDB::default();
 
     let code = get_code()?;
-    let info = AccountInfo {
-        code: Some(Bytecode::new_raw(code)),
-        ..Default::default()
-    };
+    let info = AccountInfo { code: Some(Bytecode::new_raw(code)), ..Default::default() };
     db.insert_account_info(ADDR_B, info);
 
     let mut env = Env::default();
@@ -122,10 +118,8 @@ fn simulate() -> eyre::Result<()> {
     let mykey = "deadbeefdeadbeefdeadbeefdeadbeef".as_bytes().to_vec();
     let myval = "cafebabecafebabecafebabecafebabe".as_bytes().to_vec();
     {
-        let calldata = abi.encode(
-            "volatileSet",
-            (Token::FixedBytes(mykey.clone()), Token::FixedBytes(myval)),
-        )?;
+        let calldata = abi
+            .encode("volatileSet", (Token::FixedBytes(mykey.clone()), Token::FixedBytes(myval)))?;
         evm.context.env.tx = TxEnv {
             caller: ADDR_A,
             transact_to: revm::primitives::TransactTo::Call(ADDR_B),
@@ -144,10 +138,8 @@ fn simulate() -> eyre::Result<()> {
             ..Default::default()
         };
         let result = evm.transact()?;
-        let decoded = ethabi::decode(
-            &[ethabi::ParamType::FixedBytes(32)],
-            result.result.output().unwrap(),
-        )?;
+        let decoded =
+            ethabi::decode(&[ethabi::ParamType::FixedBytes(32)], result.result.output().unwrap())?;
         let val = match &decoded[0] {
             Token::FixedBytes(b) => b,
             _ => todo!(),

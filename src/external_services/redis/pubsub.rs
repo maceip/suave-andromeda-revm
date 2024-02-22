@@ -1,12 +1,18 @@
-use std::collections::{HashMap, VecDeque};
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::{
+        mpsc::{channel, Receiver, Sender},
+        Arc, Mutex,
+    },
+    thread,
+    time::Duration,
+};
 
-use ethers::abi::{encode, parse_abi, Address, Bytes as AbiBytes, Contract, Detokenize, Token};
-use ethers::contract::{BaseContract, Lazy};
-use ethers::types::Bytes;
+use ethers::{
+    abi::{encode, parse_abi, Address, Bytes as AbiBytes, Contract, Detokenize, Token},
+    contract::{BaseContract, Lazy},
+    types::Bytes,
+};
 
 pub static REDIS_PUBSUB_ABI: Lazy<BaseContract> = Lazy::new(|| {
     let contract: Contract =
@@ -172,15 +178,10 @@ impl RedisPubsub {
 
         let mut conn = client.get_connection().unwrap();
 
-        let mut subscriber = RedisSusbscriber {
-            pubsub: conn.as_pubsub(),
-            subscribers: HashMap::new(),
-        };
+        let mut subscriber =
+            RedisSusbscriber { pubsub: conn.as_pubsub(), subscribers: HashMap::new() };
 
-        subscriber
-            .pubsub
-            .set_read_timeout(Some(Duration::from_millis(10)))
-            .unwrap();
+        subscriber.pubsub.set_read_timeout(Some(Duration::from_millis(10))).unwrap();
 
         loop {
             // TODO: move to tokio-comp

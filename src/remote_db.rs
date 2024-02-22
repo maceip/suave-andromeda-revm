@@ -1,16 +1,18 @@
 use std::collections::HashMap;
-use tokio::runtime::Handle;
-use tokio::task::block_in_place;
+use tokio::{runtime::Handle, task::block_in_place};
 
-use ethers::prelude::Address as EthersAddress;
-use ethers::types::{H256 as EH256, U256 as EU256};
+use ethers::{
+    prelude::Address as EthersAddress,
+    types::{H256 as EH256, U256 as EU256},
+};
 
-use revm::db::{AccountState, CacheDB};
-use revm::primitives::{hash_map::Entry, AccountInfo, Address, Bytecode, Bytes, B256, U256};
-use revm::{Database, DatabaseRef};
+use revm::{
+    db::{AccountState, CacheDB},
+    primitives::{hash_map::Entry, AccountInfo, Address, Bytecode, Bytes, B256, U256},
+    Database, DatabaseRef,
+};
 
-use execution::rpc::ExecutionRpc;
-use execution::ExecutionClient;
+use execution::{rpc::ExecutionRpc, ExecutionClient};
 use helios::types::BlockTag::{Latest, Number};
 
 pub trait StateProvider {
@@ -101,17 +103,13 @@ impl<SP: StateProvider, ExtDB: DatabaseRef> RemoteDB<SP, ExtDB> {
     ) -> Result<(), StateProviderError> {
         let ethers_slots_vec = Vec::from_iter(access_list.iter().map(|(addr, slots_vec)| {
             let ethers_slots = Vec::from_iter(
-                slots_vec
-                    .iter()
-                    .map(|slot| EH256::from_slice(slot.to_be_bytes_vec().as_slice())),
+                slots_vec.iter().map(|slot| EH256::from_slice(slot.to_be_bytes_vec().as_slice())),
             );
             (*addr, ethers_slots)
         }));
 
         let ethers_access_list_slices = Vec::from_iter(
-            ethers_slots_vec
-                .iter()
-                .map(|(addr, slots_vec)| (*addr, Some(slots_vec.as_slice()))),
+            ethers_slots_vec.iter().map(|(addr, slots_vec)| (*addr, Some(slots_vec.as_slice()))),
         );
 
         self.prefetch(ethers_access_list_slices)
@@ -188,7 +186,8 @@ impl<SP: StateProvider, ExtDB: DatabaseRef> Database for RemoteDB<SP, ExtDB> {
     fn storage(&mut self, address: Address, index: U256) -> Result<U256, Self::Error> {
         match self.db.accounts.entry(address) {
             Entry::Vacant(_) => {
-                // Note: if this doesn't hold (it should according to the comments), insert the account
+                // Note: if this doesn't hold (it should according to the comments), insert the
+                // account
                 panic!("{} storage for non-loaded address requested", address)
             }
             Entry::Occupied(mut acc_entry) => {

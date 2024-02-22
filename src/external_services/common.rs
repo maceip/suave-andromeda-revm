@@ -1,4 +1,3 @@
-use ethers::abi::Uint;
-use ethers::types::Address;
+use ethers::{abi::Uint, types::Address};
 
 pub type CallContext = (Uint, Address, Address);

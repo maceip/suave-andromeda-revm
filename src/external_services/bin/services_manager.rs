@@ -54,10 +54,8 @@ impl ServicesManagerHttpServer {
     pub fn new(host: String, port: String) -> Self {
         let server = Server::http(format!("{}:{}", &host, &port)).unwrap();
 
-        let routes: Vec<(Regex, HandlerFn)> = vec![(
-            Regex::new(r#"^/$"#).unwrap(),
-            ServicesManagerHttpServer::handle_request,
-        )];
+        let routes: Vec<(Regex, HandlerFn)> =
+            vec![(Regex::new(r#"^/$"#).unwrap(), ServicesManagerHttpServer::handle_request)];
 
         ServicesManagerHttpServer { server, routes }
     }
@@ -134,10 +132,12 @@ mod tests {
         DatabaseCommit, InMemoryDB, Transact,
     };
 
-    use ethers;
-    use ethers::abi::{JsonAbi, Token};
-    use ethers::contract::{BaseContract, Lazy};
-    use ethers::types::U256;
+    use ethers::{
+        self,
+        abi::{JsonAbi, Token},
+        contract::{BaseContract, Lazy},
+        types::U256,
+    };
     use std::{
         include_str,
         sync::{Arc, Barrier},
@@ -148,10 +148,8 @@ mod tests {
     use suave_andromeda_revm::new_andromeda_revm;
 
     pub static SAMPLE_JSON_ABI: Lazy<JsonAbi> = Lazy::new(|| {
-        serde_json::from_str(include_str!(
-            "../../out/ServicesSample.sol/StoreServiceSample.json"
-        ))
-        .unwrap()
+        serde_json::from_str(include_str!("../../out/ServicesSample.sol/StoreServiceSample.json"))
+            .unwrap()
     });
 
     pub static SAMPLE_ABI: Lazy<ethers::abi::Abi> = Lazy::new(|| {
@@ -229,9 +227,8 @@ mod tests {
             /* Ping */
             let mut tmp_db = db.clone();
             let mut evm = new_andromeda_revm(&mut tmp_db, &mut env, None);
-            let calldata = sample_contract_abi
-                .encode("ping", Token::Bytes(vec![0x01, 0x42]))
-                .unwrap();
+            let calldata =
+                sample_contract_abi.encode("ping", Token::Bytes(vec![0x01, 0x42])).unwrap();
             evm.context.env.tx = TxEnv {
                 caller: ADDR_A,
                 transact_to: revm::primitives::TransactTo::Call(sample_contract_addr),

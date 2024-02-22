@@ -22,10 +22,7 @@ async fn main() {
         let mut input_buf = String::new();
         io::stdin().read_line(&mut input_buf).expect("");
 
-        match service
-            .execute_command(input_buf.trim(), cli_args.trace)
-            .await
-        {
+        match service.execute_command(input_buf.trim(), cli_args.trace).await {
             Ok(res) => println!("{:?}", res),
             Err(e) => println!("{:?}", e),
         }

@@ -1,6 +1,8 @@
-use ethers::abi::{encode, Contract, Detokenize, Token};
-use ethers::contract::{BaseContract, Lazy};
-use ethers::types::Bytes;
+use ethers::{
+    abi::{encode, Contract, Detokenize, Token},
+    contract::{BaseContract, Lazy},
+    types::Bytes,
+};
 
 use crate::external_services::common::CallContext;
 
